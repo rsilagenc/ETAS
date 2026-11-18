@@ -22,7 +22,7 @@ set_up_logger(level=logging.DEBUG)
 
 if __name__ == '__main__':
     # reads configuration for example ETAS parameter inversion
-    with open("../config/invert_etas_config.json", 'r') as f:
+    with open("../config/invert_etas_config_2010.json", 'r') as f:
         inversion_config = json.load(f)
 
     # to run varying mc example inversion, uncomment this (explanations below):
@@ -83,9 +83,9 @@ if __name__ == '__main__':
             theta_0: initial guess for parameters. does not affect final
                 parameters, but with a good initial guess the algorithm
                 converges faster.
-            fixed_parameters: if some parameters should not be inverted 
+            fixed_parameters: if some parameters should not be inverted
                 but taken as given, they can be specified here. The additional
-                parameter alpha = a - rho * gamma can be set either 
+                parameter alpha = a - rho * gamma can be set either
                 to a fixed value, or to 'beta', in which case it is enforced
                 that alpha = beta.
 
