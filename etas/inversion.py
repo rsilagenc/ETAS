@@ -1353,6 +1353,18 @@ class ETASParameterCalculation:
             theta_0_without_mu = theta_0[4:]
             bounds = ranges[4:]
 
+            initial_fun = neg_log_likelihood_free_prod(
+                theta_0_without_mu,
+                self.n_hat,
+                self.pij,
+                self.source_events,
+                self.timewindow_length,
+                self.timewindow_start,
+                self.area,
+                self.beta,
+                self.m_ref - self.delta_m / 2,
+            )
+
             res = minimize(
                 neg_log_likelihood_free_prod,
                 x0=theta_0_without_mu,
@@ -1387,6 +1399,13 @@ class ETASParameterCalculation:
             theta_0_without_mu = theta_0[2:]
             bounds = ranges[2:]
 
+            initial_fun = neg_log_likelihood(
+                theta_0_without_mu,
+                self.pij,
+                self.source_events,
+                self.m_ref - self.delta_m / 2,
+            )
+
             res = minimize(
                 neg_log_likelihood,
                 x0=theta_0_without_mu,
@@ -1406,6 +1425,64 @@ class ETASParameterCalculation:
                 ]
             else:
                 new_theta = [np.log10(mu_hat), None, *new_theta_without_mu]
+        if self.free_productivity:
+            parameter_names = [
+                "log10_c",
+                "omega",
+                "log10_tau",
+                "log10_d",
+                "gamma",
+                "rho",
+            ]
+            active_bounds = ranges[4:]
+        else:
+            parameter_names = [
+                "log10_k0",
+                "a",
+                "log10_c",
+                "omega",
+                "log10_tau",
+                "log10_d",
+                "gamma",
+                "rho",
+            ]
+            active_bounds = ranges[2:]
+
+        bound_values = {
+            name: (float(bound[0]), float(bound[1]))
+            for name, bound in zip(parameter_names, active_bounds)
+        }
+
+        log10_c_index = parameter_names.index("log10_c")
+        log10_c_initial = theta_0_without_mu[log10_c_index]
+        log10_c_final = res.x[log10_c_index]
+        log10_c_lower = bound_values["log10_c"][0]
+        log10_c_upper = bound_values["log10_c"][1]
+
+        self.logger.info(
+            "free_productivity=%s, n_hat=%s, i_hat=%s",
+            self.free_productivity,
+            self.n_hat,
+            getattr(self, "i_hat", None),
+        )
+        self.logger.info("Initial parameters: %s", theta_0_without_mu)
+        self.logger.info("Initial objective value: %s", initial_fun)
+        self.logger.info("Final parameters: %s", res.x)
+        self.logger.info("res.success: %s", res.success)
+        self.logger.info("res.message: %s", res.message)
+        self.logger.info("res.fun: %s", res.fun)
+        self.logger.info("res.nit: %s", res.nit)
+        self.logger.info("res.nfev: %s", res.nfev)
+        self.logger.info("Optimization bounds: %s", bound_values)
+        self.logger.info(
+            "log10_c initial=%s, final=%s, bounds=[%s, %s], "
+            "distance from lower bound=%s",
+            log10_c_initial,
+            log10_c_final,
+            log10_c_lower,
+            log10_c_upper,
+            log10_c_final - log10_c_lower,
+        )
 
         self.logger.debug(
             "    optimization step took {}".format(
